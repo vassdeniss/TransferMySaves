@@ -6,10 +6,21 @@ public partial class MainPage : ContentPage
 {
     private readonly string _ftpHost = "192.168.0.23";
     private readonly int _ftpPort = 5000;
+    private readonly Progress<FtpProgress>? _progress;
 
     public MainPage()
     {
         this.InitializeComponent();
+
+        this._progress = new(async x =>
+        {
+            if (x.Progress < 0)
+            {
+                return;
+            }
+
+            await this.progressBar.ProgressTo(x.Progress / 100, 200, Easing.Linear);
+        });
     }
 
     private async void Button_OnClicked(object? sender, EventArgs e)
@@ -20,11 +31,17 @@ public partial class MainPage : ContentPage
 
         await ftp.Connect(token);
 
+        this.progressBar.IsVisible = true;
         await ftp.DownloadFile(
             @"C:\Users\vassd\Desktop\Pokemon - Emerald Version (USA, Europe).srm",
             "/retroarch/cores/savefiles/gpSP/Pokemon - Emerald Version (USA, Europe).srm",
             FtpLocalExists.Overwrite,
-            FtpVerify.Retry, token: token);
+            FtpVerify.Retry, 
+            this._progress, 
+            token);
+
+        await ftp.Disconnect(token);
+        await this.DisplayAlert("Success!", "Saves transferred!", "Ok");
     }
 }
 

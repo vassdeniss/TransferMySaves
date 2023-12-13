@@ -1,14 +1,17 @@
-﻿using FluentFTP;
+﻿using System.IO;
+using System.IO.Compression;
+using FluentFTP;
+using FluentFTP.Helpers;
+using Microsoft.Extensions.Configuration;
 
 namespace TransferMySaves;
 
 public partial class MainPage : ContentPage
 {
-    private readonly string _ftpHost = "192.168.0.23";
-    private readonly int _ftpPort = 5000;
-    private readonly Progress<FtpProgress>? _progress;
+    private readonly Progress<FtpProgress> _progress;
+    private readonly IConfiguration _config;
 
-    public MainPage()
+    public MainPage(IConfiguration config)
     {
         this.InitializeComponent();
 
@@ -21,27 +24,105 @@ public partial class MainPage : ContentPage
 
             await this.progressBar.ProgressTo(x.Progress / 100, 200, Easing.Linear);
         });
+
+        this._config = config;
     }
 
-    private async void Button_OnClicked(object? sender, EventArgs e)
+    private async void TransferButton_OnClicked(object? sender, EventArgs e)
     {
         CancellationToken token = new();
 
-        using AsyncFtpClient ftp = new(this._ftpHost, this._ftpPort);
+        using AsyncFtpClient ftpFrom = new(this.fromHostEntry.Text);
+        if (!string.IsNullOrEmpty(this.fromPortEntry.Text))
+        {
+            ftpFrom.Port = int.Parse(this.fromPortEntry.Text);
+        }
 
-        await ftp.Connect(token);
+        using AsyncFtpClient ftpTo = new(this.toHostEntry.Text);
+        if (!string.IsNullOrEmpty(this.toPortEntry.Text))
+        {
+            ftpTo.Port = int.Parse(this.toPortEntry.Text);
+        }
 
-        this.progressBar.IsVisible = true;
-        await ftp.DownloadFile(
-            @"C:\Users\vassd\Desktop\Pokemon - Emerald Version (USA, Europe).srm",
-            "/retroarch/cores/savefiles/gpSP/Pokemon - Emerald Version (USA, Europe).srm",
-            FtpLocalExists.Overwrite,
-            FtpVerify.Retry, 
-            this._progress, 
-            token);
+        DirectoryInfo directory = new(FileSystem.Current.AppDataDirectory);
 
-        await ftp.Disconnect(token);
-        await this.DisplayAlert("Success!", "Saves transferred!", "Ok");
+        try
+        {
+            this.transferButton.IsEnabled = false;
+            this.activityIndicator.IsVisible = true;
+            this.activityIndicator.IsRunning = true;
+            this.progressBar.IsVisible = true;
+
+            await ftpFrom.AutoConnect(token);
+            await ftpTo.AutoConnect(token);
+
+            IEnumerable<IConfiguration> configurations = this._config.GetChildren();
+            foreach (IConfiguration config in configurations)
+            {
+                foreach (FileInfo file in directory.GetFiles())
+                {
+                    file.Delete();
+                }
+
+                EmuPath path = config.Get<EmuPath>()!;
+
+                path.DetermineFromToPaths(
+                    this.fromPicker.Items[this.fromPicker.SelectedIndex],
+                    out string fromPath,
+                    out string toPath);
+
+                //await ftpFrom.SetWorkingDirectory(fromPath, token);
+                //await ftpTo.SetWorkingDirectory(toPath, token);
+
+                FtpListItem[] files = await ftpFrom.GetListing(fromPath, FtpListOption.ForceList, token);
+                await ftpFrom.DownloadFiles(
+                    FileSystem.Current.AppDataDirectory,
+                    files.Select(file => file.FullName),
+                    FtpLocalExists.Overwrite,
+                    FtpVerify.Retry,
+                    FtpError.DeleteProcessed,
+                    token,
+                    this._progress);
+
+                if (path.DsConverter is not null && path.PspConverter is not null)
+                {
+                    string convertorString = this.fromPicker.Items[this.fromPicker.SelectedIndex] == "3DS"
+                        ? path.PspConverter
+                        : path.DsConverter;
+
+                    Func<string, Task> convertor = Convertors.GetCorrectConvertor(convertorString);
+                    await Convertors.ApplyConverter(convertor, directory.GetFiles());
+                }
+
+                this.progressBar.Progress = 0;
+                await ftpTo.UploadFiles(
+                    Directory.GetFiles(FileSystem.Current.AppDataDirectory),
+                    toPath,
+                    token: token,
+                    progress: this._progress);
+            }
+
+            await this.DisplayAlert("Success!", "Saves transferred!", "Ok");
+        }
+        catch (Exception exception)
+        {
+            await this.DisplayAlert("Error!", exception.Message, "Ok");
+        }
+        finally
+        {
+            this.progressBar.IsVisible = false;
+            this.transferButton.IsEnabled = true;
+            this.activityIndicator.IsVisible = false;
+            this.activityIndicator.IsRunning = false;
+
+            foreach (FileInfo file in directory.GetFiles())
+            {
+                file.Delete();
+            }
+
+            await ftpFrom.Disconnect(token);
+            await ftpTo.Disconnect(token);
+        }
     }
 }
 

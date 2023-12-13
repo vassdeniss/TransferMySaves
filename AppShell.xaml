@@ -8,7 +8,7 @@
     Title="TransferMySaves">
 
     <ShellContent
-        Title="Home"
+        Title="Transfer my Saves!"
         ContentTemplate="{DataTemplate local:MainPage}"
         Route="MainPage" />
 

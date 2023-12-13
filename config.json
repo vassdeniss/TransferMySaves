@@ -1,0 +1,12 @@
+{
+  "Gba": {
+    "DsPath": "/retroarch/cores/savefiles/gpSP",
+    "PspPath": "/PSP/GAME/gpSP kai Game Boy Advance/GBA/SAV"
+  },
+  "Gbc": {
+    "DsPath": "/retroarch/cores/savefiles/Gambatte",
+    "PspPath": "/PSP/GAME/MasterBoy V2.10 Game Boy Color/Roms GBC/SAVE",
+    "DsConverter": "SavGzToSrm",
+    "PspConverter": "SrmToSavGz"
+  }
+}

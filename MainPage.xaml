@@ -2,17 +2,75 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TransferMySaves.MainPage">
-    <ScrollView>
-        <VerticalStackLayout
-            Padding="30,0"
-            Spacing="25"
-            HorizontalOptions="Center">
-            <Button Text="Connect"
-                    Clicked="Button_OnClicked" />
-            <ProgressBar x:Name="progressBar"
+    <VerticalStackLayout Margin="32"
+                         HorizontalOptions="Fill" >
+        <Grid RowSpacing="25"
+              ColumnSpacing="25">
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <Entry Grid.Row="0"
+                   Grid.Column="0"
+                   Grid.ColumnSpan="2"
+                   x:Name="fromHostEntry"
+                   Placeholder="'from' host" />
+            <Entry Grid.Row="0"
+                   Grid.Column="2"
+                   Grid.ColumnSpan="2"
+                   x:Name="fromPortEntry"
+                   Placeholder="'from' port" />
+            <Entry Grid.Row="1"
+                   Grid.Column="0" 
+                   Grid.ColumnSpan="2"
+                   x:Name="toHostEntry"
+                   Placeholder="'to' host" />
+            <Entry Grid.Row="1"
+                   Grid.Column="2" 
+                   Grid.ColumnSpan="2"
+                   x:Name="toPortEntry"
+                   Placeholder="'to' port" />
+            <Picker Grid.Row="2"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="3"
+                    x:Name="fromPicker"
+                    Title="Source">
+                <Picker.ItemsSource>
+                    <x:Array Type="{x:Type x:String}">
+                        <x:String>3DS</x:String>
+                        <x:String>PSP</x:String>
+                    </x:Array>
+                </Picker.ItemsSource>
+            </Picker>
+            <Button x:Name="transferButton"
+                    Grid.Row="3"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="3"
+                    Text="Transfer"
+                    BackgroundColor="Orange"
+                    Clicked="TransferButton_OnClicked" />
+            <ActivityIndicator x:Name="activityIndicator"
+                               Grid.Row="2"
+                               Grid.Column="3"
+                               Grid.RowSpan="2"
+                               IsRunning="False"
+                               IsVisible="False" />
+            <ProgressBar Grid.Row="4"
+                         Grid.Column="0"
+                         Grid.ColumnSpan="4"
+                         x:Name="progressBar"
                          IsVisible="False"
                          Progress="0.0"
                          ProgressColor="Orange" />
-        </VerticalStackLayout>
-    </ScrollView>
+        </Grid>
+    </VerticalStackLayout>
 </ContentPage>

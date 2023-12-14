@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.Configuration;
 
 using System.Reflection;
+using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace TransferMySaves;
 
@@ -18,7 +20,10 @@ public static class MauiProgram
             });
 
         builder.Services.AddTransient<MainPage>();
-    
+        builder.Services.AddLogging(s =>
+        {
+            s.AddSerilog();
+        });
 
         Assembly assembly = Assembly.GetExecutingAssembly();
         using Stream stream = assembly.GetManifestResourceStream("TransferMySaves.config.json")

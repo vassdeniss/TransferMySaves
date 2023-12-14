@@ -1,11 +1,17 @@
-﻿namespace TransferMySaves;
+﻿using Serilog;
+
+namespace TransferMySaves;
 
 public partial class App : Application
 {
     public App()
     {
-        InitializeComponent();
+        this.InitializeComponent();
 
-        MainPage = new AppShell();
+        Log.Logger = new LoggerConfiguration()
+            .WriteTo.File(Path.Combine(AppContext.BaseDirectory, "log.txt"))
+            .CreateLogger();
+
+        this.MainPage = new AppShell();
     }
 }

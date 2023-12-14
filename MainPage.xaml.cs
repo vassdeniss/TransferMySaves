@@ -1,8 +1,8 @@
-﻿using System.IO;
-using System.IO.Compression;
-using FluentFTP;
-using FluentFTP.Helpers;
+﻿using FluentFTP;
+
 using Microsoft.Extensions.Configuration;
+
+using Serilog;
 
 namespace TransferMySaves;
 
@@ -37,12 +37,21 @@ public partial class MainPage : ContentPage
         {
             ftpFrom.Port = int.Parse(this.fromPortEntry.Text);
         }
+        ftpFrom.LegacyLogger = (level, s) =>
+        {
+            Log.Information(s);
+        };
+
 
         using AsyncFtpClient ftpTo = new(this.toHostEntry.Text);
         if (!string.IsNullOrEmpty(this.toPortEntry.Text))
         {
             ftpTo.Port = int.Parse(this.toPortEntry.Text);
         }
+        ftpTo.LegacyLogger = (level, s) =>
+        {
+            Log.Information(s);
+        };
 
         DirectoryInfo directory = new(FileSystem.Current.AppDataDirectory);
 
@@ -54,7 +63,6 @@ public partial class MainPage : ContentPage
             this.progressBar.IsVisible = true;
 
             await ftpFrom.AutoConnect(token);
-            await ftpTo.AutoConnect(token);
 
             IEnumerable<IConfiguration> configurations = this._config.GetChildren();
             foreach (IConfiguration config in configurations)
@@ -66,13 +74,16 @@ public partial class MainPage : ContentPage
 
                 EmuPath path = config.Get<EmuPath>()!;
 
+                // Debug purposes
+                if (path.PspConverter is null)
+                {
+                    continue;
+                }
+
                 path.DetermineFromToPaths(
                     this.fromPicker.Items[this.fromPicker.SelectedIndex],
                     out string fromPath,
                     out string toPath);
-
-                //await ftpFrom.SetWorkingDirectory(fromPath, token);
-                //await ftpTo.SetWorkingDirectory(toPath, token);
 
                 FtpListItem[] files = await ftpFrom.GetListing(fromPath, FtpListOption.ForceList, token);
                 await ftpFrom.DownloadFiles(
@@ -86,14 +97,17 @@ public partial class MainPage : ContentPage
 
                 if (path.DsConverter is not null && path.PspConverter is not null)
                 {
-                    string convertorString = this.fromPicker.Items[this.fromPicker.SelectedIndex] == "3DS"
+                    string? convertorString = this.fromPicker.Items[this.fromPicker.SelectedIndex] == "3DS"
                         ? path.PspConverter
                         : path.DsConverter;
-
-                    Func<string, Task> convertor = Convertors.GetCorrectConvertor(convertorString);
-                    await Convertors.ApplyConverter(convertor, directory.GetFiles());
+                    if (convertorString is not null)
+                    {
+                        Func<string, Task> convertor = Convertors.GetCorrectConvertor(convertorString);
+                        await Convertors.ApplyConverter(convertor, directory.GetFiles());
+                    }
                 }
 
+                await ftpTo.AutoConnect(token);
                 this.progressBar.Progress = 0;
                 await ftpTo.UploadFiles(
                     Directory.GetFiles(FileSystem.Current.AppDataDirectory),
@@ -125,4 +139,3 @@ public partial class MainPage : ContentPage
         }
     }
 }
-

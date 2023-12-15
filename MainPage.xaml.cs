@@ -2,8 +2,6 @@
 
 using Microsoft.Extensions.Configuration;
 
-using Serilog;
-
 namespace TransferMySaves;
 
 public partial class MainPage : ContentPage
@@ -26,6 +24,8 @@ public partial class MainPage : ContentPage
         });
 
         this._config = config;
+
+        this.emulatorView.ItemsSource = this._config.GetChildren().Select(x => x.Key);
     }
 
     private async void TransferButton_OnClicked(object? sender, EventArgs e)
@@ -37,10 +37,6 @@ public partial class MainPage : ContentPage
         {
             ftpFrom.Port = int.Parse(this.fromPortEntry.Text);
         }
-        ftpFrom.LegacyLogger = (level, s) =>
-        {
-            Log.Information(s);
-        };
 
 
         using AsyncFtpClient ftpTo = new(this.toHostEntry.Text);
@@ -48,10 +44,6 @@ public partial class MainPage : ContentPage
         {
             ftpTo.Port = int.Parse(this.toPortEntry.Text);
         }
-        ftpTo.LegacyLogger = (level, s) =>
-        {
-            Log.Information(s);
-        };
 
         DirectoryInfo directory = new(FileSystem.Current.AppDataDirectory);
 

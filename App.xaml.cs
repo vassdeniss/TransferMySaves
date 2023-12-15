@@ -13,5 +13,7 @@ public partial class App : Application
             .CreateLogger();
 
         this.MainPage = new AppShell();
+
+        Current.UserAppTheme = AppTheme.Light;
     }
 }

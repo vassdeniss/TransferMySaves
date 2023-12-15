@@ -1,12 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="TransferMySaves.MainPage">
+             x:Class="TransferMySaves.MainPage"
+             xmlns:controls="clr-namespace:Microsoft.Maui.Controls.Compatibility;assembly=Microsoft.Maui.Controls.Compatibility">
     <VerticalStackLayout Margin="32"
                          HorizontalOptions="Fill" >
         <Grid RowSpacing="25"
               ColumnSpacing="25">
             <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition />
                 <RowDefinition />
                 <RowDefinition />
                 <RowDefinition />
@@ -41,30 +44,54 @@
                    Placeholder="'to' port" />
             <Picker Grid.Row="2"
                     Grid.Column="0"
-                    Grid.ColumnSpan="3"
+                    Grid.ColumnSpan="2"
                     x:Name="fromPicker"
                     Title="Source">
                 <Picker.ItemsSource>
                     <x:Array Type="{x:Type x:String}">
                         <x:String>3DS</x:String>
-                        <x:String>PSP</x:String>
+                        <x:String>PC</x:String>
                     </x:Array>
                 </Picker.ItemsSource>
             </Picker>
+            <Picker Grid.Row="2"
+                    Grid.Column="2"
+                    Grid.ColumnSpan="2"
+                    x:Name="toPicker"
+                    Title="Target">
+                <Picker.ItemsSource>
+                    <x:Array Type="{x:Type x:String}">
+                        <x:String>3DS</x:String>
+                        <x:String>PC</x:String>
+                    </x:Array>
+                </Picker.ItemsSource>
+            </Picker>
+            <CollectionView Grid.Row="3"
+                            Grid.Column="0"
+                            Grid.ColumnSpan="4"
+                            x:Name="emulatorView"
+                            SelectionMode="Multiple">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Padding="10">
+                            <Label Text="{Binding}"></Label>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
             <Button x:Name="transferButton"
-                    Grid.Row="3"
+                    Grid.Row="5"
                     Grid.Column="0"
                     Grid.ColumnSpan="3"
                     Text="Transfer"
                     BackgroundColor="Orange"
                     Clicked="TransferButton_OnClicked" />
             <ActivityIndicator x:Name="activityIndicator"
-                               Grid.Row="2"
+                               Grid.Row="5"
                                Grid.Column="3"
-                               Grid.RowSpan="2"
                                IsRunning="False"
                                IsVisible="False" />
-            <ProgressBar Grid.Row="4"
+            <ProgressBar Grid.Row="6"
                          Grid.Column="0"
                          Grid.ColumnSpan="4"
                          x:Name="progressBar"

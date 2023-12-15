@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.Configuration;
 
-using System.Reflection;
-using Microsoft.Extensions.Logging;
 using Serilog;
+
+using System.Reflection;
 
 namespace TransferMySaves;
 
